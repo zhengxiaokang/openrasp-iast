@@ -1,0 +1,116 @@
+version: '3.4'
+services:
+    apache-php7.2:
+        build:
+            context: ./images/apache-php7.2
+            args: 
+                - RASP_VERSION
+        image: openrasp/iast-cloud/apache-php:7.2
+        hostname: apache-php7.2
+        depends_on:
+            - rasp-cloud
+        ports:
+            - "18662:18662"
+        volumes:
+            - "./volumes/apache-php7.2/html:/var/www/html"
+        tty: true
+
+    tomcat-8.5:
+        build:
+            context: ./images/tomcat-8.5
+            args: 
+                - RASP_VERSION
+        image: openrasp/iast-cloud/tomcat-8.5
+        hostname: tomcat-8.5
+        ports: 
+            - "18663:18663"
+        depends_on:
+            - rasp-cloud
+        tty: true
+
+    mysql5.6:
+        build:
+            context: ./images/mysql5.6
+        image: openrasp/iast-cloud/mysql:5.6
+        hostname: mysql5.6
+        tty: true
+
+    rasp-cloud:
+        build:
+            context: ./images/rasp-cloud
+            args: 
+                - RASP_VERSION
+        image: openrasp/iast-cloud/rasp-cloud
+        hostname: rasp-cloud
+        ports: 
+            - "18660:8086"
+        depends_on:
+            - elasticsearch6.4.2
+            - mongodb3.6
+        tty: true
+
+    elasticsearch6.4.2:
+        build:
+            context: ./images/elasticsearch6.4.2
+        image: openrasp/iast-cloud/elasticsearch6.4.2
+        ulimits: 
+            nofile:
+                soft: 131071
+                hard: 131071
+        hostname: elasticsearch6.4.2
+        tty: true
+
+    mongodb3.6:
+        build:
+            context: ./images/mongodb3.6
+        image: openrasp/iast-cloud/mongodb3.6
+        hostname: mongodb3.6
+        tty: true
+
+    openrasp-iast:
+        build:
+            context: ./images/openrasp-iast
+        image: openrasp/iast-cloud/openrasp-iast
+        hostname: openrasp-iast
+        ports: 
+            - "18661:18664"
+        depends_on:
+            - mysql5.6
+            - rasp-cloud
+            # - owasp-benchmark
+            - apache-php7.2
+        volumes:
+            - "../../openrasp_iast:/root/openrasp-iast-code"
+            - "./volumes/openrasp-iast/config/:/root/openrasp-iast/"
+            - "./volumes/openrasp-iast/logs/:/root/openrasp-iast-logs/"
+            - "./volumes/testfiles/:/testfiles"
+        tty: true
+
+    # owasp-benchmark:
+    #     build:
+    #         # network: host
+    #         context: ./images/owasp-benchmark
+    #         args: 
+    #             - RASP_VERSION
+    #     image: openrasp/iast-cloud/owasp-benchmark
+    #     hostname: owasp-benchmark
+    #     ports: 
+    #         - "8443:8443"
+    #     depends_on:
+    #         - rasp-cloud
+    #     volumes: 
+    #         - "./volumes/testfiles/:/testfiles"
+    #     tty: true
+
+    #webgoat:
+    #    build:
+    #        context: ./images/webgoat
+    #        args: 
+    #            - RASP_VERSION
+    #    image: openrasp/iast-cloud/webgoat
+    #    hostname: webgoat
+    #    ports: 
+    #        - "8444:8444"
+    #    depends_on:
+    #        - rasp-cloud
+    #    tty: true
